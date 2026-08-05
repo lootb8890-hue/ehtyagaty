@@ -1,0 +1,48 @@
+# ============================================================================
+# Git Ignore Rules for Ihtiyajati Monorepo
+# ============================================================================
+
+# Flutter & Dart build outputs
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.metadata
+**/generated/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
+**/.idea/
+**/.vscode/
+**/*.iml
+**/*.ipr
+**/*.iws
+**/desktop.ini
+
+# Android-specific build files
+**/local.properties
+**/key.properties
+**/*.keystore
+**/*.jks
+**/flutter_sdk/
+
+# iOS-specific build files
+**/.symlinks/
+**/Pods/
+**/Podfile.lock
+**/*.xcworkspace
+
+# Web-specific files
+**/node_modules/
+**/.npm/
+npm-debug.log*
+
+# Private credentials & keys
+**/*_private*
+**/secret*
+**/*.env
+**/*.key
