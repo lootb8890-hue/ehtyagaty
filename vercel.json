@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "name": "ehtyagaty",
+  "builds": [
+    {
+      "src": "ihtiyajati_admin/pure_web/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/ihtiyajati_admin/pure_web/$1"
+    }
+  ]
+}
