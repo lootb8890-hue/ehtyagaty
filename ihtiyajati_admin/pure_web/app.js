@@ -224,7 +224,7 @@ async function loadDashboardData() {
     // Process Settings
     if (settingsSnap.exists) {
       const data = settingsSnap.data();
-      document.getElementById("whatsappApiUrl").value = data.whatsapp_api_url || "http://localhost:3000/send-otp";
+      document.getElementById("whatsappApiUrl").value = data.whatsapp_api_url || "https://ihtiyajati-whatsapp.onrender.com/send-otp";
       document.getElementById("whatsappToken").value = data.whatsapp_token || "local_gateway";
       document.getElementById("telegramBotToken").value = data.telegram_bot_token || "";
       document.getElementById("telegramChatId").value = data.telegram_chat_id || "";
@@ -345,7 +345,7 @@ async function handleSettingsSubmit(e) {
 // ──────── WhatsApp Gateway Status & QR Code Sync ────────
 async function checkWhatsAppStatus() {
   const whatsappApiUrlInput = document.getElementById("whatsappApiUrl");
-  let baseUrl = "http://localhost:3000";
+  let baseUrl = "https://ihtiyajati-whatsapp.onrender.com";
   if (whatsappApiUrlInput && whatsappApiUrlInput.value) {
     try {
       const parsed = new URL(whatsappApiUrlInput.value);
