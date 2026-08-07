@@ -224,7 +224,20 @@ async function loadDashboardData() {
     // Process Settings
     if (settingsSnap.exists) {
       const data = settingsSnap.data();
-      document.getElementById("whatsappApiUrl").value = data.whatsapp_api_url || "https://ihtiyajati-whatsapp.onrender.com/send-otp";
+      let activeUrl = data.whatsapp_api_url || "";
+      if (!activeUrl || activeUrl.includes("localhost") || activeUrl.includes("127.0.0.1") || activeUrl.includes("192.168")) {
+        activeUrl = "https://ihtiyajati-whatsapp.onrender.com/send-otp";
+        // Auto update Firestore to production URL
+        db.collection("settings").doc("notification_config").set({
+          whatsapp_api_url: activeUrl,
+          whatsapp_token: data.whatsapp_token || "local_gateway",
+          telegram_bot_token: data.telegram_bot_token || "",
+          telegram_chat_id: data.telegram_chat_id || "",
+          provider: data.provider || "both",
+          updated_at: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(() => {});
+      }
+      document.getElementById("whatsappApiUrl").value = activeUrl;
       document.getElementById("whatsappToken").value = data.whatsapp_token || "local_gateway";
       document.getElementById("telegramBotToken").value = data.telegram_bot_token || "";
       document.getElementById("telegramChatId").value = data.telegram_chat_id || "";
