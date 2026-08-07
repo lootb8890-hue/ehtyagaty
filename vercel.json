@@ -1,16 +1,13 @@
 {
-  "version": 2,
-  "name": "ehtyagaty",
-  "builds": [
+  "cleanUrls": true,
+  "rewrites": [
     {
-      "src": "ihtiyajati_admin/pure_web/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
+      "source": "/",
+      "destination": "/ihtiyajati_admin/pure_web/index.html"
+    },
     {
-      "src": "/(.*)",
-      "dest": "/ihtiyajati_admin/pure_web/$1"
+      "source": "/(.*)",
+      "destination": "/ihtiyajati_admin/pure_web/$1"
     }
   ]
 }
