@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحكم الإدارة الكاملة | احتياجاتي</title>
+
+  <!-- Google Fonts: Cairo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Leaflet CSS for Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Chart.js for Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- 1. Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">
+          <i class="fa-solid fa-truck-fast"></i>
+        </div>
+        <div class="brand-text">
+          <h2>احتياجاتي</h2>
+          <span>لوحة تحكم الإدارة الكاملة</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="dashboard">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>الرئيسية والمؤشرات</span>
+        </button>
+        <button class="nav-item" data-tab="users">
+          <i class="fa-solid fa-users"></i>
+          <span>المستخدمين</span>
+        </button>
+        <button class="nav-item" data-tab="drivers">
+          <i class="fa-solid fa-motorcycle"></i>
+          <span>الكباتن والسائقين</span>
+        </button>
+        <button class="nav-item" data-tab="stores">
+          <i class="fa-solid fa-store"></i>
+          <span>المتاجر والشركاء</span>
+        </button>
+        <button class="nav-item" data-tab="gps">
+          <i class="fa-solid fa-map-location-dot"></i>
+          <span>التتبع المباشر GPS</span>
+        </button>
+        <button class="nav-item" data-tab="revenue">
+          <i class="fa-solid fa-wallet"></i>
+          <span>الحسابات والإيرادات</span>
+        </button>
+        <button class="nav-item" data-tab="settings">
+          <i class="fa-solid fa-sliders"></i>
+          <span>إعدادات المنظومة</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="server-status">
+          <span class="pulse-dot"></span>
+          <span>حالة خوادم النظام: <b>نشط 99.9%</b></span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 2. Main Content Area -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="top-header">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="globalSearch" placeholder="بحث في المتاجر، الطلبات، الكباتن، المستخدمين...">
+        </div>
+        <div class="header-actions">
+          <div class="badge-tag">
+            <i class="fa-solid fa-building-flag"></i>
+            <span>مركز عمليات كربلاء المقدسة</span>
+          </div>
+          <div class="admin-profile">
+            <div class="avatar"><i class="fa-solid fa-user-shield"></i></div>
+            <span>مدير النظام الشامل</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dynamic Tab Content -->
+      <div class="content-body">
+        
+        <!-- Tab 0: Dashboard Overview -->
+        <section id="tab-dashboard" class="tab-pane active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon users-icon"><i class="fa-solid fa-users"></i></div>
+              <div class="stat-info">
+                <span class="stat-label">المستخدمين المسجلين</span>
+                <h3 id="stat-total-users">0</h3>
+                <span class="stat-trend positive">+12% هذا الأسبوع</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon drivers-icon"><i class="fa-solid fa-motorcycle"></i></div>
+              <div class="stat-info">
+                <span class="stat-label">الكباتن النشطين</span>
+                <h3 id="stat-total-drivers">0</h3>
+                <span class="stat-trend positive">بالخدمة حالياً</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon stores-icon"><i class="fa-solid fa-store"></i></div>
+              <div class="stat-info">
+                <span class="stat-label">المتاجر والشركاء</span>
+                <h3 id="stat-total-stores">0</h3>
+                <span class="stat-trend neutral">متاجر كربلاء</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon revenue-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+              <div class="stat-info">
+                <span class="stat-label">إجمالي المبيعات الإجمالية</span>
+                <h3 id="stat-total-revenue">0 د.ع</h3>
+                <span class="stat-trend positive">أرباح تراكمية</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="analytics-row">
+            <div class="chart-card">
+              <h4>مؤشر الطلبات اليومية وحجم المبيعات</h4>
+              <canvas id="salesChart" height="110"></canvas>
+            </div>
+            <div class="chart-card">
+              <h4>توزيع الطلبيات حسب الأقسام</h4>
+              <canvas id="categoryChart" height="110"></canvas>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-header">
+              <h4>آخر الطلبيات المسجلة في النظام</h4>
+              <button class="btn-refresh" onclick="loadDashboardData()"><i class="fa-solid fa-rotate-right"></i> تحديث البيانات</button>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>رقم الطلب</th>
+                    <th>اسم الزبون</th>
+                    <th>المتجر / الجهة</th>
+                    <th>الكابتن المسؤول</th>
+                    <th>المبلغ الكلي</th>
+                    <th>الحالة والتقدم</th>
+                  </tr>
+                </thead>
+                <tbody id="recentOrdersBody">
+                  <tr><td colspan="6" class="text-center">جاري تحميل البيانات الحقيقية...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 1: Users -->
+        <section id="tab-users" class="tab-pane">
+          <div class="page-title-row">
+            <h3>إدارة شؤون المستخدمين والحسابات المسجلة</h3>
+            <button class="btn-primary" onclick="showAddUserModal()"><i class="fa-solid fa-user-plus"></i> إضافة مستخدم جديد</button>
+          </div>
+          <div class="table-card">
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>المعرف</th>
+                    <th>الاسم الكامل</th>
+                    <th>رقم الهاتف</th>
+                    <th>نوع الحساب</th>
+                    <th>تاريخ التسجيل</th>
+                    <th>الموقع</th>
+                    <th>حالة الحساب</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <tr><td colspan="7" class="text-center">جاري تحميل المستخدمين...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 2: Drivers -->
+        <section id="tab-drivers" class="tab-pane">
+          <div class="page-title-row">
+            <h3>إدارة الكباتن وأسطول التوصيل</h3>
+            <button class="btn-primary" onclick="alert('خاصية إضافة كابتن مفعّلة')"><i class="fa-solid fa-plus"></i> تسجيل كابتن جديد</button>
+          </div>
+          <div class="table-card">
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>المعرف</th>
+                    <th>اسم الكابتن</th>
+                    <th>نوع المركبة</th>
+                    <th>التقييم</th>
+                    <th>طلبيات اليوم</th>
+                    <th>أرباح اليوم</th>
+                    <th>حالة الاتصال</th>
+                  </tr>
+                </thead>
+                <tbody id="driversTableBody">
+                  <tr><td colspan="7" class="text-center">جاري تحميل أسطول السائقين...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 3: Stores -->
+        <section id="tab-stores" class="tab-pane">
+          <div class="page-title-row">
+            <h3>المتاجر ومحلات التجهيز الشريكة</h3>
+            <button class="btn-primary" onclick="alert('إضافة متجر جديد مفعّلة')"><i class="fa-solid fa-shop"></i> إضافة متجر جديد</button>
+          </div>
+          <div class="table-card">
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>معرف المتجر</th>
+                    <th>اسم المتجر</th>
+                    <th>القسم</th>
+                    <th>اسم المالك</th>
+                    <th>المبيعات الكلية</th>
+                    <th>حالة المتجر</th>
+                  </tr>
+                </thead>
+                <tbody id="storesTableBody">
+                  <tr><td colspan="6" class="text-center">جاري تحميل قائمة المتاجر...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 4: GPS Tracking Map -->
+        <section id="tab-gps" class="tab-pane">
+          <div class="page-title-row">
+            <h3>شاشة التتبع الجغرافي المباشر لأسطول كربلاء المقدسة</h3>
+          </div>
+          <div class="gps-container">
+            <div id="leafletMap" class="light-map"></div>
+            <div class="gps-sidebar">
+              <h4>أسطول التوصيل النشط</h4>
+              <hr>
+              <div id="gpsDriversList">
+                <div class="driver-tile">
+                  <span class="status-dot online"></span>
+                  <div>
+                    <strong>الكابتن حيدر الكعبي</strong>
+                    <p>دراجة نارية • حي رمضان</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 5: Revenue -->
+        <section id="tab-revenue" class="tab-pane">
+          <div class="page-title-row">
+            <h3>الإحصائيات المالية وسجل التحويلات</h3>
+          </div>
+          <div class="table-card">
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>رقم المعاملة</th>
+                    <th>الجهة / المتجر</th>
+                    <th>المبلغ الكلي</th>
+                    <th>نسبة المنظومة (10%)</th>
+                    <th>أجرة الكابتن</th>
+                    <th>صافي المتجر</th>
+                    <th>الحالة والنوع</th>
+                  </tr>
+                </thead>
+                <tbody id="revenueTableBody">
+                  <tr><td colspan="7" class="text-center">جاري تحميل سجل المعاملات المالية...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 6: System & OTP Settings -->
+        <section id="tab-settings" class="tab-pane">
+          <div class="page-title-row">
+            <h3>إعدادات المنظومة العامة وبوابات التحقق OTP</h3>
+          </div>
+          <div class="settings-card">
+            <form id="settingsForm">
+              <h4><i class="fa-solid fa-coins"></i> أجور التوصيل والعمولات</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>أجرة التوصيل العادية للطلبات (د.ع)</label>
+                  <input type="number" id="baseDeliveryFee" value="5000">
+                </div>
+                <div class="form-group">
+                  <label>أجرة التوصيل الثقيل ومواد البناء (د.ع)</label>
+                  <input type="number" id="heavyDeliveryFee" value="12000">
+                </div>
+                <div class="form-group">
+                  <label>نسبة عمولة التطبيق من المبيعات (%)</label>
+                  <input type="number" id="commissionRate" value="10">
+                </div>
+              </div>
+
+              <hr>
+
+              <h4><i class="fa-brands fa-whatsapp" style="color: #10B981;"></i> بوابة الواتساب المحلية والتيلغرام (OTP Messages)</h4>
+
+              <!-- WhatsApp Connection Status & QR Code Widget -->
+              <div class="whatsapp-card" id="whatsappGatewayCard">
+                <div class="whatsapp-card-header">
+                  <div class="header-title">
+                    <i class="fa-brands fa-whatsapp whatsapp-icon"></i>
+                    <div>
+                      <h4 style="margin: 0; color: #F8FAFC; font-size: 16px;">حالة بوابة الواتساب والربط المباشر</h4>
+                      <p style="margin: 4px 0 0 0; color: #94A3B8; font-size: 12px;">ربط رقم الواتساب لإرسال إشعارات ورموز OTP تلقائياً للزبائن</p>
+                    </div>
+                  </div>
+                  <div id="whatsappStatusBadge" class="status-pill offline">
+                    <span class="dot"></span> <span id="whatsappStatusText">جاري التحقق من الاتصال...</span>
+                  </div>
+                </div>
+
+                <!-- State 1: NOT Connected (Show QR Code) -->
+                <div id="whatsappNotConnectedState" class="whatsapp-body" style="display: none;">
+                  <div class="qr-container">
+                    <div class="qr-box">
+                      <div id="qrLoadingSpinner" class="qr-spinner">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 32px; color: #10B981;"></i>
+                        <p style="margin-top: 10px; color: #94A3B8; font-size: 13px;">جاري توليد كود QR للربط...</p>
+                      </div>
+                      <img id="whatsappQrImage" src="" alt="WhatsApp QR Code" style="display: none; width: 200px; height: 200px; border-radius: 10px; border: 3px solid #10B981; padding: 5px; background: white;">
+                    </div>
+                    <div class="qr-instructions">
+                      <h4 style="color: #38BDF8; font-size: 14px; margin-bottom: 8px;"><i class="fa-solid fa-qrcode"></i> خطوات ربط الحساب بالداش بورد:</h4>
+                      <ol style="margin: 0; padding-right: 20px; color: #CBD5E1; font-size: 12px; line-height: 1.8;">
+                        <li>افتح تطبيق <b>الواتساب (WhatsApp)</b> في هاتفك المحمول.</li>
+                        <li>انتقل إلى <b>الإعدادات (Settings)</b> ⚙️ ثم <b>الأجهزة المرتبطة (Linked Devices)</b>.</li>
+                        <li>اضغط على <b>ربط جهاز (Link a Device)</b> وقم بمسح كود QR الظاهر أعلاه.</li>
+                      </ol>
+                      <button type="button" class="btn-refresh-sm" onclick="checkWhatsAppStatus()"><i class="fa-solid fa-rotate"></i> تحديث كود QR والتأكد من الحالة</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- State 2: Connected (Show Connected Account Name & Picture) -->
+                <div id="whatsappConnectedState" class="whatsapp-body" style="display: none;">
+                  <div class="connected-user-card">
+                    <div class="user-avatar-wrapper">
+                      <img id="whatsappUserAvatar" src="" alt="WhatsApp Avatar" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=WhatsApp&background=10B981&color=fff'">
+                    </div>
+                    <div class="user-details">
+                      <span class="badge-sender"><i class="fa-solid fa-paper-plane"></i> الحساب المُرسل للرسائل</span>
+                      <h3 id="whatsappUserName" style="margin: 6px 0 2px 0; color: #F8FAFC; font-size: 18px;">اسم الحساب</h3>
+                      <p id="whatsappUserPhone" style="margin: 0; color: #10B981; font-weight: 700; font-size: 14px;">+964 770 000 0000</p>
+                      <p style="margin: 6px 0 0 0; color: #34D399; font-size: 12px;"><i class="fa-solid fa-circle-check"></i> حساب الواتساب متصل بنجاح وجاهز للإرسال التلقائي</p>
+                    </div>
+                    <div class="user-actions">
+                      <button type="button" class="btn-unlink" onclick="disconnectWhatsApp()"><i class="fa-solid fa-power-off"></i> إلغاء الربط</button>
+                    </div>
+                  </div>
+
+                  <!-- Test Send Box -->
+                  <div class="whatsapp-test-box">
+                    <h5 style="margin: 0 0 10px 0; color: #F8FAFC; font-size: 13px;"><i class="fa-solid fa-paper-plane"></i> تجربة إرسال رسالة مباشرة من الحساب المربوط:</h5>
+                    <div class="test-input-group">
+                      <input type="text" id="testPhoneInput" placeholder="رقم المستقبل (مثال: 07700000000)">
+                      <input type="text" id="testMessageInput" value="مرحباً! هذه رسالة تجريبية من لوحة تحكم احتياجاتي ✅" placeholder="نص الرسالة">
+                      <button type="button" class="btn-send-test" onclick="sendTestWhatsAppMessage()"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
+                    </div>
+                    <div id="testMessageResult" class="test-result" style="display: none; margin-top: 8px; font-size: 12px; font-weight: bold;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>مزود الخدمة النشط لإرسال رمز التحقق</label>
+                <select id="otpProvider">
+                  <option value="both">كلاهما (تيلغرام + واتساب سيرفر محلي)</option>
+                  <option value="whatsapp" selected>واتساب السيرفر المحلي فقط (Local Gateway)</option>
+                  <option value="telegram">تيلغرام فقط (Bot API)</option>
+                  <option value="none">تعطيل الإرسال التلقائي</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>رابط API الإرسال للواتساب (WhatsApp API URL)</label>
+                <input type="text" id="whatsappApiUrl" value="http://localhost:3000/send-otp" placeholder="http://localhost:3000/send-otp">
+                <small>مربوط تلقائياً ببوابة الواتساب المحلية التي قمت بمسح كود الـ QR الخاص بها.</small>
+              </div>
+
+              <div class="form-group">
+                <label>رمز الوصول السري (WhatsApp Token)</label>
+                <input type="text" id="whatsappToken" value="local_gateway" placeholder="local_gateway">
+              </div>
+
+              <div class="form-group">
+                <label>توكن بوت التيلغرام (Telegram Bot Token)</label>
+                <input type="text" id="telegramBotToken" value="" placeholder="123456789:ABCdefGHIjklMNOPqrstUVwxz">
+              </div>
+
+              <div class="form-group">
+                <label>معرف دردشة الإدارة للتيلغرام (Telegram Chat ID)</label>
+                <input type="text" id="telegramChatId" value="" placeholder="-100123456789">
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-success"><i class="fa-solid fa-floppy-disk"></i> حفظ الإعدادات والتحديث فوراً</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Firebase Web SDK (v9 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+  <!-- App Script -->
+  <script src="app.js"></script>
+
+</body>
+</html>

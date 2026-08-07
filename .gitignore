@@ -46,3 +46,5 @@ npm-debug.log*
 **/secret*
 **/*.env
 **/*.key
+**/auth_info_baileys/
+**/.wwebjs_auth/

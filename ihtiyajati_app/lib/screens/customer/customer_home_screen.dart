@@ -12,6 +12,7 @@ import '../../config/app_theme.dart';
 import '../../config/app_constants.dart';
 import '../../services/mock_data.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -133,12 +134,14 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     .bodyMedium
                     ?.copyWith(color: AppTheme.textSecondary),
               ),
-              Text(
-                'أحمد الكربلائي',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w800),
+              Consumer<AuthProvider>(
+                builder: (context, auth, _) => Text(
+                  auth.currentUser?.name ?? 'أحمد الكربلائي',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
               ),
             ],
           ),

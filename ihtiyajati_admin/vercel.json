@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "name": "ihtiyajati-admin",
+  "builds": [
+    {
+      "src": "pure_web/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/pure_web/$1"
+    }
+  ]
+}

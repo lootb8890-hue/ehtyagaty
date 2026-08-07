@@ -5,8 +5,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'config/app_theme.dart';
 import 'config/app_routes.dart';
+import 'config/firebase_config.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/orders_provider.dart';
@@ -14,19 +16,26 @@ import 'providers/orders_provider.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set system UI overlay style
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: AppTheme.surfaceDarker,
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  // Async non-blocking Firebase initialization
+  Firebase.initializeApp(
+    options: FirebaseConfig.currentPlatform,
+  ).catchError((e) {
+    debugPrint('Firebase initialization failed: $e');
+    return Firebase.app();
+  });
 
-  // Set preferred orientations
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  try {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: AppTheme.surfaceDarker,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ));
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  } catch (_) {}
 
   runApp(const IhtiyajatiApp());
 }

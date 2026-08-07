@@ -9,9 +9,11 @@ import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../config/app_theme.dart';
+import 'package:provider/provider.dart';
 import '../../config/app_constants.dart';
 import '../../services/mock_data.dart';
 import '../../models/models.dart';
+import '../../providers/auth_provider.dart';
 
 class StoreDashboardScreen extends StatefulWidget {
   const StoreDashboardScreen({super.key});
@@ -117,13 +119,17 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                MockData.currentStore.name,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w800, fontSize: 15),
-                maxLines: 2,
+               Consumer<AuthProvider>(
+                builder: (context, auth, _) => Text(
+                  auth.currentUser?.name != null
+                      ? 'متجر ${auth.currentUser!.name}'
+                      : MockData.currentStore.name,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800, fontSize: 15),
+                  maxLines: 2,
+                ),
               ),
               Row(
                 children: [
@@ -537,8 +543,8 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-                      subdomains: const ['a', 'b', 'c', 'd'],
+                      urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      subdomains: const ['a', 'b', 'c'],
                     ),
                     MarkerLayer(
                       markers: [

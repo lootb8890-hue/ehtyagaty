@@ -10,6 +10,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../config/app_theme.dart';
 import '../../services/mock_data.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class DriverHomeScreen extends StatefulWidget {
   const DriverHomeScreen({super.key});
@@ -90,12 +92,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'الكابتن ${MockData.currentDriver.name}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800),
+                Consumer<AuthProvider>(
+                  builder: (context, auth, _) => Text(
+                    auth.currentUser?.name != null
+                        ? 'الكابتن ${auth.currentUser!.name}'
+                        : 'الكابتن ${MockData.currentDriver.name}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
                 ),
                 Row(
                   children: [
@@ -151,8 +157,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               ),
               children: [
                 TileLayer(
-                  urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-                  subdomains: const ['a', 'b', 'c', 'd'],
+                  urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  subdomains: const ['a', 'b', 'c'],
                 ),
                 MarkerLayer(
                   markers: [

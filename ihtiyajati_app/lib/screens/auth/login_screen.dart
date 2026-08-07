@@ -222,24 +222,38 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
-    if (_phoneController.text.isEmpty) return;
+    if (_phoneController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('الرجاء إدخال رقم الهاتف وكلمة المرور')),
+      );
+      return;
+    }
     setState(() => _isLoading = true);
 
     final auth = context.read<AuthProvider>();
     auth.setAccountType(widget.accountType);
-    await auth.login(_phoneController.text, _passwordController.text);
+    final success = await auth.login(_phoneController.text, _passwordController.text);
 
     if (mounted) {
       setState(() => _isLoading = false);
-      switch (widget.accountType) {
-        case 'driver':
-          context.go('/driver');
-          break;
-        case 'store':
-          context.go('/store');
-          break;
-        default:
-          context.go('/customer');
+      if (success) {
+        switch (widget.accountType) {
+          case 'driver':
+            context.go('/driver');
+            break;
+          case 'store':
+            context.go('/store');
+            break;
+          default:
+            context.go('/customer');
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(auth.errorMessage ?? 'فشل تسجيل الدخول. يرجى التحقق من المدخلات.'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

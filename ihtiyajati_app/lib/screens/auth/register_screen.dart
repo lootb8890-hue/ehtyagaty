@@ -169,31 +169,157 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  void _showOtpDialog(String verificationId) {
+    final otpController = TextEditingController();
+    bool otpLoading = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppTheme.surfaceCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+            side: BorderSide(color: AppTheme.borderDark),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.security, color: AppTheme.primaryGold),
+              const SizedBox(width: 10),
+              Text(
+                'رمز التحقق للهاتف',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'تم إرسال رمز تحقق OTP إلى الرقم ${_phoneController.text}. يرجى إدخال الرمز المكون من 6 أرقام لتأكيد حسابك.',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: otpController,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 20, letterSpacing: 8, fontWeight: FontWeight.bold),
+                maxLength: 6,
+                decoration: InputDecoration(
+                  counterText: '',
+                  hintText: '******',
+                  hintStyle: TextStyle(color: AppTheme.textMuted, letterSpacing: 8),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    borderSide: BorderSide(color: AppTheme.borderDark),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() => _isLoading = false);
+              },
+              child: Text('إلغاء', style: TextStyle(color: AppTheme.textMuted)),
+            ),
+            ElevatedButton(
+              onPressed: otpLoading
+                  ? null
+                  : () async {
+                      if (otpController.text.length < 6) return;
+                      setDialogState(() => otpLoading = true);
+
+                      final auth = context.read<AuthProvider>();
+                      final success = await auth.verifyOTPAndSignUp(
+                        verificationId: verificationId,
+                        smsCode: otpController.text,
+                        name: _nameController.text,
+                        phone: _phoneController.text,
+                        password: _passwordController.text,
+                      );
+
+                      setDialogState(() => otpLoading = false);
+                      if (mounted) {
+                        if (success) {
+                          Navigator.pop(context); // Close OTP Dialog
+                          // Redirect
+                          switch (widget.accountType) {
+                            case 'driver':
+                              context.go('/driver');
+                              break;
+                            case 'store':
+                              context.go('/store');
+                              break;
+                            default:
+                              context.go('/customer');
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(auth.errorMessage ?? 'رمز غير صحيح. يرجى المحاولة مجدداً.'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: otpLoading
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('تأكيد'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleRegister() async {
-    if (_nameController.text.isEmpty || _phoneController.text.isEmpty) return;
+    if (_nameController.text.isEmpty || _phoneController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('الرجاء ملء جميع الحقول المطلوبة')),
+      );
+      return;
+    }
     setState(() => _isLoading = true);
 
     final auth = context.read<AuthProvider>();
     auth.setAccountType(widget.accountType);
-    await auth.register(
-      name: _nameController.text,
-      phone: _phoneController.text,
-      password: _passwordController.text,
-    );
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      switch (widget.accountType) {
-        case 'driver':
-          context.go('/driver');
-          break;
-        case 'store':
-          context.go('/store');
-          break;
-        default:
-          context.go('/customer');
-      }
-    }
+    // Trigger Phone OTP Send
+    await auth.sendSMSOTP(
+      phone: _phoneController.text,
+      onCodeSent: (verificationId) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          _showOtpDialog(verificationId);
+        }
+      },
+      onFailed: (errorMsg) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMsg),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+    );
   }
 
   @override
