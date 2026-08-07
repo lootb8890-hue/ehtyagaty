@@ -22,7 +22,7 @@ class AuthService {
       } else {
         // Initialize default configuration document if missing
         final defaultConfig = {
-          'whatsapp_api_url': 'http://localhost:3000/send-otp',
+          'whatsapp_api_url': 'https://ihtiyajati-whatsapp.onrender.com/send-otp',
           'whatsapp_token': 'local_gateway',
           'telegram_bot_token': 'YOUR_TELEGRAM_BOT_TOKEN',
           'telegram_chat_id': 'YOUR_TELEGRAM_CHAT_ID',
@@ -33,7 +33,7 @@ class AuthService {
       }
     } catch (_) {}
     return {
-      'whatsapp_api_url': 'http://localhost:3000/send-otp',
+      'whatsapp_api_url': 'https://ihtiyajati-whatsapp.onrender.com/send-otp',
       'whatsapp_token': 'local_gateway',
       'provider': 'both',
     };
@@ -54,7 +54,7 @@ class AuthService {
       final provider = config['provider'] ?? 'both';
       String whatsappUrl = (config['whatsapp_api_url'] != null && config['whatsapp_api_url'].toString().isNotEmpty)
           ? config['whatsapp_api_url'].toString()
-          : 'http://localhost:3000/send-otp';
+          : 'https://ihtiyajati-whatsapp.onrender.com/send-otp';
       final whatsappToken = (config['whatsapp_token'] != null && config['whatsapp_token'].toString().isNotEmpty)
           ? config['whatsapp_token'].toString()
           : 'local_gateway';
