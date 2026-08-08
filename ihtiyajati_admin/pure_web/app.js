@@ -221,27 +221,37 @@ async function loadDashboardData() {
 
     document.getElementById("stat-total-revenue").textContent = `${totalRevenueSum.toLocaleString()} د.ع`;
 
-    // Process Settings
+    // Process Settings (Restore from Firestore first, fallback to localStorage)
+    let settingsData = null;
     if (settingsSnap.exists) {
-      const data = settingsSnap.data();
-      let activeUrl = data.whatsapp_api_url || "";
-      if (!activeUrl || activeUrl.includes("localhost") || activeUrl.includes("127.0.0.1") || activeUrl.includes("192.168")) {
-        activeUrl = "https://ihtiyajati-whatsapp.onrender.com/send-otp";
-        // Auto update Firestore to production URL
-        db.collection("settings").doc("notification_config").set({
-          whatsapp_api_url: activeUrl,
-          whatsapp_token: data.whatsapp_token || "local_gateway",
-          telegram_bot_token: data.telegram_bot_token || "",
-          telegram_chat_id: data.telegram_chat_id || "",
-          provider: data.provider || "both",
-          updated_at: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(() => {});
+      settingsData = settingsSnap.data();
+    } else {
+      try {
+        const localSettings = localStorage.getItem("ihtiyajati_notification_config");
+        if (localSettings) {
+          settingsData = JSON.parse(localSettings);
+        }
+      } catch (e) {
+        console.warn("Failed to load settings from localStorage:", e);
       }
+    }
+
+    if (settingsData) {
+      const activeUrl = settingsData.whatsapp_api_url || "https://ihtiyajati-whatsapp.onrender.com/send-otp";
       document.getElementById("whatsappApiUrl").value = activeUrl;
-      document.getElementById("whatsappToken").value = data.whatsapp_token || "local_gateway";
-      document.getElementById("telegramBotToken").value = data.telegram_bot_token || "";
-      document.getElementById("telegramChatId").value = data.telegram_chat_id || "";
-      if (data.provider) document.getElementById("otpProvider").value = data.provider;
+      document.getElementById("whatsappToken").value = settingsData.whatsapp_token || "local_gateway";
+      document.getElementById("telegramBotToken").value = settingsData.telegram_bot_token || "";
+      document.getElementById("telegramChatId").value = settingsData.telegram_chat_id || "";
+      if (settingsData.provider) document.getElementById("otpProvider").value = settingsData.provider;
+
+      // Sync to localStorage
+      try {
+        localStorage.setItem("ihtiyajati_notification_config", JSON.stringify(settingsData));
+      } catch (_) {}
+    } else {
+      // Set defaults if nothing was found anywhere
+      document.getElementById("whatsappApiUrl").value = "https://ihtiyajati-whatsapp.onrender.com/send-otp";
+      document.getElementById("whatsappToken").value = "local_gateway";
     }
 
   } catch (err) {
@@ -324,13 +334,9 @@ function initCharts() {
   }
 }
 
-// ──────── 5. Save Settings to Firestore ────────
+// ──────── 5. Save Settings to Firestore & Local Storage ────────
 async function handleSettingsSubmit(e) {
   e.preventDefault();
-  if (!db) {
-    alert("❌ متعذر الاتصال بقاعدة البيانات.");
-    return;
-  }
 
   const whatsappApiUrl = document.getElementById("whatsappApiUrl").value;
   const whatsappToken = document.getElementById("whatsappToken").value;
@@ -338,21 +344,43 @@ async function handleSettingsSubmit(e) {
   const telegramChatId = document.getElementById("telegramChatId").value;
   const provider = document.getElementById("otpProvider").value;
 
-  try {
-    await db.collection("settings").doc("notification_config").set({
-      whatsapp_api_url: whatsappApiUrl,
-      whatsapp_token: whatsappToken,
-      telegram_bot_token: telegramBotToken,
-      telegram_chat_id: telegramChatId,
-      provider: provider,
-      updated_at: firebase.firestore.FieldValue.serverTimestamp()
-    });
+  const settingsObj = {
+    whatsapp_api_url: whatsappApiUrl,
+    whatsapp_token: whatsappToken,
+    telegram_bot_token: telegramBotToken,
+    telegram_chat_id: telegramChatId,
+    provider: provider,
+    updated_at: new Date().toISOString()
+  };
 
-    alert("✅ تم حفظ الإعدادات وتحديث بوابة الواتساب بنجاح!");
+  // 1. Always save to local storage as a robust backup
+  try {
+    localStorage.setItem("ihtiyajati_notification_config", JSON.stringify(settingsObj));
   } catch (err) {
-    console.error("Save error:", err);
-    alert("❌ حدث خطأ أثناء حفظ الإعدادات: " + err.message);
+    console.error("Failed to save to localStorage:", err);
   }
+
+  // 2. Try saving to Firestore if available
+  if (db) {
+    try {
+      await db.collection("settings").doc("notification_config").set({
+        whatsapp_api_url: whatsappApiUrl,
+        whatsapp_token: whatsappToken,
+        telegram_bot_token: telegramBotToken,
+        telegram_chat_id: telegramChatId,
+        provider: provider,
+        updated_at: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      alert("✅ تم حفظ الإعدادات وتحديث بوابة الواتساب بنجاح!");
+      return;
+    } catch (err) {
+      console.error("Firestore save error:", err);
+      alert("⚠️ تم حفظ الإعدادات محلياً في المتصفح، ولكن فشل المزامنة مع السحابة: " + err.message);
+      return;
+    }
+  }
+
+  alert("⚠️ تم حفظ الإعدادات محلياً في المتصفح فقط (قاعدة بيانات السحابة غير متصلة).");
 }
 
 // ──────── WhatsApp Gateway Status & QR Code Sync ────────

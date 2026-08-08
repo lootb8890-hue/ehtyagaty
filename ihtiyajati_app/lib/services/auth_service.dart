@@ -83,9 +83,11 @@ class AuthService {
       targetUrls.add('http://10.178.131.117:3000/send-otp');
       targetUrls.add('http://192.168.0.109:3000/send-otp');
 
-      // Send via WhatsApp (Local Gateway API)
+      // Send via WhatsApp (Local/Production Gateway API)
       if (provider == 'whatsapp' || provider == 'both' || provider.isEmpty) {
         bool sentSuccessfully = false;
+        String lastError = 'تعذر الاتصال ببوابة إرسال الرمز للواتساب.';
+
         for (final targetUrl in targetUrls) {
           try {
             final url = Uri.parse(targetUrl);
@@ -98,15 +100,28 @@ class AuthService {
                 'to': formattedPhone,
                 'body': messageText,
               }),
-            ).timeout(const Duration(seconds: 4));
+            ).timeout(const Duration(seconds: 60)); // Render free tier can take up to 50s to wake up
+
             print('✅ WhatsApp OTP Send Result [${res.statusCode}]: ${res.body}');
             if (res.statusCode == 200) {
               sentSuccessfully = true;
               break;
+            } else {
+              try {
+                final Map<String, dynamic> errBody = jsonDecode(res.body);
+                lastError = errBody['error'] ?? 'خطأ في الاستجابة من البوابة (${res.statusCode})';
+              } catch (_) {
+                lastError = 'استجابة غير صالحة من البوابة (${res.statusCode})';
+              }
             }
           } catch (e) {
             print('❌ WhatsApp OTP Send Error ($targetUrl): $e');
+            lastError = 'خطأ في الاتصال بالبوابة: $e';
           }
+        }
+
+        if (!sentSuccessfully) {
+          throw Exception(lastError);
         }
       }
 
