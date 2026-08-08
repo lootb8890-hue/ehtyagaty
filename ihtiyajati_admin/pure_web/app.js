@@ -450,6 +450,32 @@ async function checkWhatsAppStatus() {
         if (qrSpinner) qrSpinner.style.display = "block";
       }
     }
+
+    // Render live logs dynamically
+    const logsListEl = document.getElementById("whatsappLogsList");
+    if (logsListEl) {
+      const logs = data.logs || [];
+      if (logs.length === 0) {
+        logsListEl.innerHTML = `<div style="color: #94A3B8; font-size: 12px; text-align: center; padding: 10px;">لا توجد طلبات إرسال حالياً. بانتظار الطلبات من تطبيق الزبون...</div>`;
+      } else {
+        logsListEl.innerHTML = logs.map(log => {
+          const statusText = log.status === 'success' ? 'تم الإرسال' : 'فشل';
+          const errorDesc = log.error ? `<div style="color: #EF4444; font-size: 10px; margin-top: 4px; text-align: right;">⚠️ السبب: ${log.error}</div>` : '';
+          
+          return `
+            <div style="display: flex; flex-direction: column; padding: 8px; border-bottom: 1px solid #1E293B; background: #111827; border-radius: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                <span style="color: #64748B;">⏱️ ${log.time}</span>
+                <span style="color: #38BDF8; font-weight: bold; direction: ltr;">${log.phone}</span>
+                <span style="color: #F59E0B; font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 1px 6px; border-radius: 4px;">🔑 OTP: ${log.otp}</span>
+                <span style="padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; ${log.status === 'success' ? 'background: rgba(16, 185, 129, 0.15); color: #10B981;' : 'background: rgba(239, 68, 68, 0.15); color: #EF4444;'}">${statusText}</span>
+              </div>
+              ${errorDesc}
+            </div>
+          `;
+        }).join('');
+      }
+    }
   } catch (err) {
     statusBadge.className = "status-pill offline";
     statusText.textContent = "السيرفر المحلي غير متصل (port 3000)";

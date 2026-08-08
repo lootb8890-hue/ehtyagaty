@@ -26,6 +26,40 @@ let isConnected = false;
 let qrCodeBase64 = '';
 let connectedUser = null;
 
+// Live OTP Activity Logs (stores last 15 requests in memory)
+const otpLogs = [];
+
+function addLog(to, body, status, errorMsg = '') {
+    const timestamp = new Date().toLocaleTimeString('ar-EG', { hour12: false });
+    const cleanPhone = (to || '').toString().replace(/\D/g, '');
+    
+    // Mask middle of phone number for privacy
+    let maskedPhone = cleanPhone;
+    if (cleanPhone.length > 6) {
+        maskedPhone = '+' + cleanPhone.substring(0, 4) + '****' + cleanPhone.substring(cleanPhone.length - 3);
+    } else if (cleanPhone.length > 0) {
+        maskedPhone = '+' + cleanPhone;
+    } else {
+        maskedPhone = 'رقم غير معروف';
+    }
+
+    // Extract 6-digit OTP code if present
+    const otpMatch = (body || '').match(/\b\d{6}\b/);
+    const otp = otpMatch ? otpMatch[0] : '---';
+
+    otpLogs.unshift({
+        time: timestamp,
+        phone: maskedPhone,
+        otp: otp,
+        status: status,
+        error: errorMsg
+    });
+
+    if (otpLogs.length > 15) {
+        otpLogs.pop();
+    }
+}
+
 async function connectToWhatsApp() {
     try {
         const authFolder = path.join(__dirname, 'auth_info_baileys');
@@ -152,7 +186,8 @@ app.get('/status', (req, res) => {
     res.json({
         ready: isConnected,
         qrCode: qrCodeBase64,
-        user: isConnected ? (connectedUser || { name: 'حساب الواتساب المربوط', phone: '', formattedPhone: '', profilePic: '' }) : null
+        user: isConnected ? (connectedUser || { name: 'حساب الواتساب المربوط', phone: '', formattedPhone: '', profilePic: '' }) : null,
+        logs: otpLogs
     });
 });
 
@@ -210,6 +245,7 @@ app.post('/send-otp', async (req, res) => {
 
     if (!sock || !isConnected) {
         console.warn('⚠️ send-otp failed: WhatsApp gateway is not connected');
+        addLog(to, body, 'failed', 'بوابة الواتساب غير متصلة بالهاتف');
         return res.status(503).json({
             success: false,
             error: 'WhatsApp gateway is not connected. Scan QR code in Dashboard first.'
@@ -218,6 +254,7 @@ app.post('/send-otp', async (req, res) => {
 
     if (!to || !body) {
         console.warn('⚠️ send-otp failed: Missing target phone or message body');
+        addLog(to, body, 'failed', 'بيانات ناقصة (رقم الهاتف أو نص الرسالة فارغ)');
         return res.status(400).json({
             success: false,
             error: 'Missing target phone ("to") or message body ("body").'
@@ -229,9 +266,11 @@ app.post('/send-otp', async (req, res) => {
         console.log(`🚀 Sending WhatsApp message via Baileys to: ${jid}`);
         await sock.sendMessage(jid, { text: String(body) });
         console.log(`✅ Message successfully delivered to: ${jid}`);
+        addLog(to, body, 'success');
         res.json({ success: true, message: 'Message sent successfully.' });
     } catch (error) {
         console.error('❌ Failed to send WhatsApp message:', error);
+        addLog(to, body, 'failed', error.message || 'فشل أثناء الإرسال');
         res.status(500).json({ success: false, error: error.message || 'Failed to send WhatsApp message.' });
     }
 });
