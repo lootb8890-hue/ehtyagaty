@@ -56,6 +56,35 @@ class DatabaseService {
     }
   }
 
+  // Fetch all products in a specific category (useful for directory catalog)
+  Future<List<ProductModel>> fetchProductsByCategory(String categoryId) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('products')
+          .where('category', isEqualTo: categoryId)
+          .get()
+          .timeout(const Duration(seconds: 4));
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        return ProductModel(
+          id: doc.id,
+          name: data['name']?.toString() ?? '',
+          description: data['description']?.toString() ?? '',
+          price: (data['price'] as num? ?? 0).toDouble(),
+          unit: data['unit']?.toString() ?? 'عدد',
+          categoryId: categoryId,
+          storeId: data['store_id']?.toString() ?? '',
+          imageUrl: data['image_url']?.toString(),
+          isAvailable: data['is_available'] as bool? ?? true,
+          isHeavy: data['is_heavy'] as bool? ?? false,
+          badge: data['badge']?.toString(),
+        );
+      }).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   // ──────────────── Orders ────────────────
   Future<void> createOrder(OrderModel order) async {
     try {

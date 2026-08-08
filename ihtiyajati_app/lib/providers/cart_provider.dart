@@ -32,6 +32,17 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addItems(ProductModel product, int quantity) {
+    if (quantity <= 0) return;
+    final existingIndex = _items.indexWhere((item) => item.product.id == product.id);
+    if (existingIndex >= 0) {
+      _items[existingIndex].quantity += quantity;
+    } else {
+      _items.add(CartItem(product: product, quantity: quantity));
+    }
+    notifyListeners();
+  }
+
   void removeItem(String productId) {
     _items.removeWhere((item) => item.product.id == productId);
     notifyListeners();

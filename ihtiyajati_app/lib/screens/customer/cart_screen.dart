@@ -121,6 +121,12 @@ class CartScreen extends StatelessWidget {
                               }),
                             ],
                           ),
+                          const SizedBox(width: 8),
+                          // Trash delete button
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 22),
+                            onPressed: () => cart.removeItem(item.product.id),
+                          ),
                         ],
                       ),
                     );

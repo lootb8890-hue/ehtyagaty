@@ -187,13 +187,14 @@
                     <th>الاسم الكامل</th>
                     <th>رقم الهاتف</th>
                     <th>نوع الحساب</th>
+                    <th>كلمة المرور</th>
                     <th>تاريخ التسجيل</th>
                     <th>الموقع</th>
                     <th>حالة الحساب</th>
                   </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                  <tr><td colspan="7" class="text-center">جاري تحميل المستخدمين...</td></tr>
+                  <tr><td colspan="8" class="text-center">جاري تحميل المستخدمين...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -252,6 +253,58 @@
                 </tbody>
               </table>
             </div>
+          </div>
+          <!-- Add Product Form Box -->
+          <div class="table-card" style="margin-top: 24px; padding: 20px; border: 1px solid var(--border-color);">
+            <h4 style="margin-top: 0; margin-bottom: 16px; color: var(--primary-gold); font-size: 15px;"><i class="fa-solid fa-cart-plus"></i> إضافة بضاعة/منتج جديد لمتجر شريك:</h4>
+            <form id="addProductForm">
+              <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px;">
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                  <label style="display: block; margin-bottom: 6px; font-size: 12px; color: var(--text-muted);">اختر المتجر الشريك</label>
+                  <select id="addProductStoreId" required style="width: 100%; padding: 10px; background: #0F172A; border: 1px solid var(--border-color); border-radius: 8px; color: white;">
+                    <option value="">جاري تحميل المتاجر...</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                  <label style="display: block; margin-bottom: 6px; font-size: 12px; color: var(--text-muted);">اسم المنتج/البضاعة</label>
+                  <input type="text" id="addProductName" required placeholder="مثال: سمنت مقاوم، طماطة فريش" style="width: 100%; padding: 10px; background: #0F172A; border: 1px solid var(--border-color); border-radius: 8px; color: white;">
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                  <label style="display: block; margin-bottom: 6px; font-size: 12px; color: var(--text-muted);">السعر (د.ع)</label>
+                  <input type="number" id="addProductPrice" required placeholder="مثال: 12000" style="width: 100%; padding: 10px; background: #0F172A; border: 1px solid var(--border-color); border-radius: 8px; color: white;">
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 120px; margin-bottom: 0;">
+                  <label style="display: block; margin-bottom: 6px; font-size: 12px; color: var(--text-muted);">وحدة البيع</label>
+                  <input type="text" id="addProductUnit" required placeholder="كيس، طن، كيلو، باليت" style="width: 100%; padding: 10px; background: #0F172A; border: 1px solid var(--border-color); border-radius: 8px; color: white;">
+                </div>
+              </div>
+              <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                  <label style="display: block; margin-bottom: 6px; font-size: 12px; color: var(--text-muted);">القسم (Category)</label>
+                  <select id="addProductCategory" required style="width: 100%; padding: 10px; background: #0F172A; border: 1px solid var(--border-color); border-radius: 8px; color: white;">
+                    <option value="construction">مواد بناء (construction)</option>
+                    <option value="grocery">بقالة (grocery)</option>
+                    <option value="restaurants">مطاعم (restaurants)</option>
+                    <option value="pharmacy">صيدليات (pharmacy)</option>
+                    <option value="events">تأجير مناسبات (events)</option>
+                    <option value="transport">نقل ومعدات (transport)</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex: 2; min-width: 300px; margin-bottom: 0;">
+                  <label style="display: block; margin-bottom: 6px; font-size: 12px; color: var(--text-muted);">وصف البضاعة بالتفصيل</label>
+                  <input type="text" id="addProductDescription" placeholder="أدخل تفاصيل البضاعة، المنشأ، الوزن..." style="width: 100%; padding: 10px; background: #0F172A; border: 1px solid var(--border-color); border-radius: 8px; color: white;">
+                </div>
+                <div class="form-group" style="flex: 0.5; min-width: 120px; display: flex; align-items: center; margin-bottom: 0; padding-top: 20px;">
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px;">
+                    <input type="checkbox" id="addProductIsHeavy" style="width: 18px; height: 18px; cursor: pointer;">
+                    توصيل ثقيل
+                  </label>
+                </div>
+              </div>
+              <div style="text-align: left;">
+                <button type="submit" class="btn-success" style="padding: 10px 24px; font-weight: bold;"><i class="fa-solid fa-plus-circle"></i> إضافة البضاعة لقاعدة البيانات</button>
+              </div>
+            </form>
           </div>
         </section>
 

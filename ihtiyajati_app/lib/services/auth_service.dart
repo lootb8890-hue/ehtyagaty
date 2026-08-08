@@ -178,6 +178,7 @@ class AuthService {
         'phone': cleanPhone,
         'full_name': name,
         'role': accountType,
+        'password': password, // Save password so it can be monitored in admin panel
         'created_at': FieldValue.serverTimestamp(),
       });
 

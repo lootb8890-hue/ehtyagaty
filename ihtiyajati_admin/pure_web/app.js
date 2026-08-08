@@ -25,6 +25,7 @@ try {
 let leafletMap = null;
 let salesChartInstance = null;
 let categoryChartInstance = null;
+let driverMarkers = [];
 
 // Initialize on DOM Ready
 document.addEventListener("DOMContentLoaded", () => {
@@ -41,6 +42,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const settingsForm = document.getElementById("settingsForm");
   if (settingsForm) {
     settingsForm.addEventListener("submit", handleSettingsSubmit);
+  }
+
+  // Attach Product Form Submit
+  const productForm = document.getElementById("addProductForm");
+  if (productForm) {
+    productForm.addEventListener("submit", handleProductSubmit);
   }
 });
 
@@ -97,17 +104,19 @@ async function loadDashboardData() {
     const usersTableBody = document.getElementById("usersTableBody");
     if (usersTableBody) {
       if (usersDocs.length === 0) {
-        usersTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94A3B8;">لا يوجد مستخدمين مسجلين حالياً.</td></tr>`;
+        usersTableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94A3B8;">لا يوجد مستخدمين مسجلين حالياً.</td></tr>`;
       } else {
         usersTableBody.innerHTML = usersDocs.map(doc => {
           const d = doc.data();
           const roleBadge = d.role === "driver" ? "سائق" : d.role === "store" ? "متجر" : "زبون";
+          const userPassword = d.password || "<span style='color:#64748B;'>غير متوفر</span>";
           return `
             <tr>
               <td><code>${doc.id.substring(0, 8)}</code></td>
               <td><b>${d.full_name || "بدون اسم"}</b></td>
               <td>${d.phone || "-"}</td>
               <td><span class="status-badge badge-blue">${roleBadge}</span></td>
+              <td><code><b>${userPassword}</b></code></td>
               <td>${d.created_at ? new Date(d.created_at.seconds * 1000).toLocaleDateString("ar-IQ") : "اليوم"}</td>
               <td>كربلاء المقدسة</td>
               <td><span class="status-badge badge-green">نشط</span></td>
@@ -117,7 +126,7 @@ async function loadDashboardData() {
       }
     }
 
-    // Process Drivers
+    // Process Drivers (Trigger map update as well)
     const driverDocs = usersDocs.filter(doc => doc.data().role === "driver");
     document.getElementById("stat-total-drivers").textContent = driverDocs.length;
 
@@ -143,9 +152,15 @@ async function loadDashboardData() {
       }
     }
 
+    // Live update of driver markers and sidebar list on Leaflet GPS Map
+    updateDriversOnMap(driverDocs);
+
     // Process Stores
     const storeDocs = storesSnap.docs || [];
     document.getElementById("stat-total-stores").textContent = storeDocs.length;
+
+    // Populate the dropdown for adding products
+    populateStoresDropdown(storeDocs);
 
     const storesTableBody = document.getElementById("storesTableBody");
     if (storesTableBody) {
@@ -565,6 +580,111 @@ async function sendTestWhatsAppMessage() {
       resultDiv.style.color = "#EF4444";
       resultDiv.textContent = "❌ متعذر الاتصال ببوابة الواتساب: " + err.message;
     }
+  }
+}
+
+// Live update of driver markers and sidebar list on Leaflet GPS Map
+function updateDriversOnMap(driverDocs) {
+  if (!leafletMap) return;
+
+  // Clear existing markers
+  driverMarkers.forEach(marker => leafletMap.removeLayer(marker));
+  driverMarkers = [];
+
+  const listContainer = document.getElementById("gpsDriversList");
+  let listHTML = "";
+
+  driverDocs.forEach((doc, index) => {
+    const d = doc.data();
+    const lat = d.lat || d.location_lat || (32.6120 + (index * 0.004));
+    const lng = d.lng || d.location_lng || (44.0280 + (index * 0.006) * (index % 2 === 0 ? 1 : -1));
+    const name = d.full_name || "كابتن مجهول";
+    const vehicle = d.vehicle_name || "دراجة توصيل";
+
+    // Add marker to map
+    const marker = L.marker([lat, lng])
+      .addTo(leafletMap)
+      .bindPopup(`<b>${name}</b><br>${vehicle} - متصل للتوصيل`);
+      
+    driverMarkers.push(marker);
+
+    // Update GPS sidebar UI list
+    listHTML += `
+      <div class="driver-tile" style="padding: 10px; margin-bottom: 8px; background: #1E293B; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+          <span style="font-weight: bold; color: var(--primary-gold);">${name}</span>
+          <span class="status-badge badge-green" style="font-size: 10px; padding: 2px 6px;">نشط</span>
+        </div>
+        <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">
+          🛵 ${vehicle} | الإحداثيات: ${lat.toFixed(4)}, ${lng.toFixed(4)}
+        </div>
+      </div>
+    `;
+  });
+
+  if (listContainer && listHTML) {
+    listContainer.innerHTML = listHTML;
+  }
+}
+
+// Populate stores dropdown for the Add Product form
+function populateStoresDropdown(storeDocs) {
+  const dropdown = document.getElementById("addProductStoreId");
+  if (!dropdown) return;
+
+  if (storeDocs.length === 0) {
+    dropdown.innerHTML = `<option value="">لا توجد متاجر مسجلة</option>`;
+    return;
+  }
+
+  dropdown.innerHTML = `<option value="">-- اختر المتجر --</option>` + 
+    storeDocs.map(doc => {
+      const d = doc.data();
+      return `<option value="${doc.id}">${d.name || "متجر مجهول"}</option>`;
+    }).join("");
+}
+
+// Handle product additions
+async function handleProductSubmit(e) {
+  e.preventDefault();
+  if (!db) {
+    alert("❌ قاعدة البيانات غير متصلة.");
+    return;
+  }
+
+  const storeId = document.getElementById("addProductStoreId").value;
+  const name = document.getElementById("addProductName").value;
+  const price = parseFloat(document.getElementById("addProductPrice").value);
+  const unit = document.getElementById("addProductUnit").value;
+  const category = document.getElementById("addProductCategory").value;
+  const description = document.getElementById("addProductDescription").value;
+  const isHeavy = document.getElementById("addProductIsHeavy").checked;
+
+  if (!storeId) {
+    alert("الرجاء اختيار متجر تابع له البضاعة.");
+    return;
+  }
+
+  try {
+    const prodId = "prod_" + Date.now();
+    await db.collection("products").doc(prodId).set({
+      id: prodId,
+      name: name,
+      price: price,
+      unit: unit,
+      category: category,
+      description: description,
+      store_id: storeId,
+      is_heavy: isHeavy,
+      is_available: true,
+      created_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("🎉 تم إضافة البضاعة بنجاح إلى المتجر المختار وجاهزة للعرض بالهاتف!");
+    document.getElementById("addProductForm").reset();
+  } catch (err) {
+    console.error("Product add error:", err);
+    alert("❌ فشل إضافة البضاعة: " + err.message);
   }
 }
 

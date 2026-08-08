@@ -13,6 +13,7 @@ import '../../config/app_constants.dart';
 import '../../services/mock_data.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/orders_provider.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -538,20 +539,346 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 
-  // ──── Placeholder tabs ────
+  // ──── Orders Tab ────
   Widget _buildOrdersTab() {
-    return const Center(
-        child: Text('طلباتي', style: TextStyle(fontSize: 20)));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'قائمة الطلبيات',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+        ),
+        Expanded(
+          child: Consumer<OrdersProvider>(
+            builder: (context, ordersProv, _) {
+              final customerOrders = ordersProv.orders;
+              if (customerOrders.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.receipt_long_outlined, size: 64, color: AppTheme.textMuted.withValues(alpha: 0.3)),
+                      const SizedBox(height: 12),
+                      const Text('لا توجد طلبيات حالياً', style: TextStyle(color: AppTheme.textMuted)),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: customerOrders.length,
+                itemBuilder: (context, index) {
+                  final order = customerOrders[index];
+                  final statusText = order.status == 'new' || order.status == 'الطلبات الجديدة'
+                      ? 'قيد التجهيز'
+                      : order.status == 'delivered' || order.status == 'تم التوصيل'
+                          ? 'تم التوصيل'
+                          : 'جاري التوصيل';
+                  final statusColor = order.status == 'delivered' || order.status == 'تم التوصيل'
+                      ? AppTheme.primaryGreen
+                      : AppTheme.accentAmber;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceCard,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      border: Border.all(color: AppTheme.borderDark),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'طلب رقم #${order.orderNumber}',
+                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: statusColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                statusText,
+                                style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(color: AppTheme.borderDark, height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              order.storeName,
+                              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                            ),
+                            Text(
+                              '${_numberFormat.format(order.total)} ${AppConstants.currency}',
+                              style: const TextStyle(color: AppTheme.primaryGreen, fontWeight: FontWeight.bold, fontSize: 13.5),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'التاريخ: ${order.createdAt != null ? DateFormat('yyyy/MM/dd').format(order.createdAt!) : 'اليوم'}',
+                              style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
+                            ),
+                            if (order.driverName != null)
+                              Text(
+                                'السائق: ${order.driverName}',
+                                style: const TextStyle(color: AppTheme.primaryBlue, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 
+  // ──── Wallet Tab ────
   Widget _buildWalletTab() {
-    return const Center(
-        child: Text('المحفظة', style: TextStyle(fontSize: 20)));
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'المحفظة الرقمية',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 16),
+          // Wallet Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              gradient: AppTheme.goldGradient,
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryGold.withValues(alpha: 0.35),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('الرصيد المتاح حالياً', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700, fontSize: 14)),
+                    Icon(Icons.account_balance_wallet, color: Colors.black87),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  '75,000 د.ع',
+                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 32),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black12,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text('المحفظة نشطة', style: TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Quick actions
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => alert('تم تفعيل خدمة شحن الرصيد'),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('شحن رصيد'),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGreen, foregroundColor: Colors.white),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => alert('تم تفعيل خدمة تحويل الرصيد'),
+                  icon: const Icon(Icons.send, size: 16),
+                  label: const Text('تحويل رصيد'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.textPrimary,
+                    side: const BorderSide(color: AppTheme.borderDark),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+          // Recent transactions
+          const Text('العمليات الأخيرة', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+          const SizedBox(height: 12),
+          _transactionItem('شحن رصيد محفظة (زين كاش)', '+25,000 د.ع', 'أمس، 08:30 م', true),
+          _transactionItem('دفع قيمة طلب رقم #104', '-38,000 د.ع', '07/08/2026', false),
+          _transactionItem('شحن رصيد محفظة (تعبئة كود)', '+50,000 د.ع', '05/08/2026', true),
+        ],
+      ),
+    );
   }
 
+  void alert(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: AppTheme.primaryGreen),
+    );
+  }
+
+  Widget _transactionItem(String title, String amount, String date, bool isAdd) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceCard,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        border: Border.all(color: AppTheme.borderDark),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+              const SizedBox(height: 4),
+              Text(date, style: const TextStyle(color: AppTheme.textMuted, fontSize: 11)),
+            ],
+          ),
+          Text(
+            amount,
+            style: TextStyle(
+              color: isAdd ? AppTheme.primaryGreen : AppTheme.accentRed,
+              fontWeight: FontWeight.w900,
+              fontSize: 13.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ──── Profile Tab ────
   Widget _buildProfileTab() {
-    return const Center(
-        child: Text('حسابي', style: TextStyle(fontSize: 20)));
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+    final roleName = user?.accountType == 'driver'
+        ? 'سائق توصيل'
+        : user?.accountType == 'store'
+            ? 'صاحب متجر'
+            : 'زبون احتياجاتي';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 16),
+          // User Avatar Big
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppTheme.primaryGold, width: 3),
+              gradient: AppTheme.goldGradient,
+            ),
+            child: const Icon(Icons.person, color: Colors.white, size: 48),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            user?.name ?? 'بدون اسم',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            roleName,
+            style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+          const SizedBox(height: 24),
+          // Details Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceCard,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              border: Border.all(color: AppTheme.borderDark),
+            ),
+            child: Column(
+              children: [
+                _profileDetailRow('رقم الهاتف:', user?.phone ?? 'لا يوجد'),
+                const Divider(color: AppTheme.borderDark, height: 24),
+                _profileDetailRow('نوع الحساب:', roleName),
+                const Divider(color: AppTheme.borderDark, height: 24),
+                _profileDetailRow('المدينة:', 'كربلاء المقدسة'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+          // Logout Button
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                await auth.logout();
+                if (mounted) {
+                  context.go('/login');
+                }
+              },
+              icon: const Icon(Icons.logout, color: Colors.white),
+              label: const Text('تسجيل الخروج من الحساب', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentRed,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileDetailRow(String label, String val) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+        Text(val, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+      ],
+    );
   }
 
   // ──── Bottom Navigation ────
